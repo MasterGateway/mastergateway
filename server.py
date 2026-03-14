@@ -2,7 +2,11 @@ from flask import Flask, render_template, jsonify, request, send_from_directory
 from flask_cors import CORS
 import json
 import os
+from pathlib import Path
 from difflib import get_close_matches
+
+# Get the base directory
+BASE_DIR = Path(__file__).resolve().parent
 
 app = Flask(__name__)
 CORS(app)
@@ -10,17 +14,38 @@ CORS(app)
 # Cargar datos de estudiantes
 def cargar_estudiantes():
     try:
-        with open('estudiantes.json', 'r', encoding='utf-8') as f:
-            return json.load(f)
+        json_path = BASE_DIR / 'estudiantes.json'
+        print(f"Intentando cargar: {json_path}")
+        print(f"Archivo existe: {json_path.exists()}")
+        
+        with open(json_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            print(f"Estudiantes cargados: {data.get('total', 0)}")
+            return data
     except Exception as e:
         print(f"Error al cargar estudiantes: {e}")
-        return {"estudiantes": [], "total": 0}
+        import traceback
+        traceback.print_exc()
+        return {"estudiantes": [], "total": 0, "error": str(e)}
 
 estudiantes_data = cargar_estudiantes()
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/api/health')
+def health():
+    """Endpoint de diagnóstico"""
+    return jsonify({
+        "status": "ok",
+        "estudiantes_cargados": estudiantes_data.get('total', 0),
+        "tiene_datos": len(estudiantes_data.get('estudiantes', [])) > 0,
+        "base_dir": str(BASE_DIR),
+        "json_exists": (BASE_DIR / 'estudiantes.json').exists(),
+        "fotos_dir_exists": (BASE_DIR / 'fotos').exists(),
+        "version": "1.0.0"
+    })
 
 @app.route('/api/estudiantes')
 def get_estudiantes():
@@ -114,12 +139,15 @@ def estadisticas():
 @app.route('/fotos/<path:filename>')
 def servir_foto(filename):
     """Sirve las fotos de los estudiantes"""
-    return send_from_directory('fotos', filename)
+    fotos_dir = BASE_DIR / 'fotos'
+    print(f"Sirviendo foto: {filename} desde {fotos_dir}")
+    return send_from_directory(str(fotos_dir), filename)
 
 @app.route('/static/<path:filename>')
 def servir_static(filename):
     """Sirve archivos estáticos"""
-    return send_from_directory('static', filename)
+    static_dir = BASE_DIR / 'static'
+    return send_from_directory(str(static_dir), filename)
 
 # Para Vercel (exportar la app)
 app = app

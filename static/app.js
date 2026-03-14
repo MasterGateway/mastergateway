@@ -307,7 +307,9 @@ function displaySuggestions(sugerencias) {
         `;
         
         item.addEventListener('click', function() {
-            document.getElementById('searchInput').value = sugerencia.texto;
+            // Use the actual value (codigo, dni, or nombre) instead of formatted text
+            const searchValue = sugerencia.valor || sugerencia.texto;
+            document.getElementById('searchInput').value = searchValue;
             dropdown.classList.remove('active');
             performSearch();
         });
