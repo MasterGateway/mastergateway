@@ -54,40 +54,70 @@ function loadTheme() {
     }
 }
 
-// Block Developer Tools - DESACTIVADO
-// (function() {
-//     // Disable right click
-//     document.addEventListener('contextmenu', function(e) {
-//         e.preventDefault();
-//         return false;
-//     });
-//     
-//     // Disable F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U, Ctrl+Shift+C
-//     document.addEventListener('keydown', function(e) {
-//         // F12
-//         if (e.key === 'F12') {
-//             e.preventDefault();
-//             return false;
-//         }
-//         // Ctrl+Shift+I (Inspector)
-//         if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-//             e.preventDefault();
-//             return false;
-//         }
-//         // Ctrl+Shift+J (Console)
-//         if (e.ctrlKey && e.shiftKey && e.key === 'J') {
-//             e.preventDefault();
-//             return false;
-//         }
-//         // Ctrl+U (View Source)
-//         if (e.ctrlKey && e.key === 'u') {
-//             e.preventDefault();
-//             return false;
-//         }
-//         // Ctrl+Shift+C (Inspector Element)
-//         if (e.ctrlKey && e.shiftKey && e.key === 'C') {
-//             e.preventDefault();
-//             return false;
+// Block Developer Tools Protection
+(function() {
+    'use strict';
+    
+    // Disable right click
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+    });
+    
+    // Disable keyboard shortcuts for DevTools
+    document.addEventListener('keydown', function(e) {
+        // F12 - DevTools
+        if (e.key === 'F12') {
+            e.preventDefault();
+            return false;
+        }
+        // Ctrl+Shift+I - Inspector
+        if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+            e.preventDefault();
+            return false;
+        }
+        // Ctrl+Shift+J - Console
+        if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+            e.preventDefault();
+            return false;
+        }
+        // Ctrl+U - View Source
+        if (e.ctrlKey && e.key === 'u') {
+            e.preventDefault();
+            return false;
+        }
+        // Ctrl+Shift+C - Inspector Element
+        if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+            e.preventDefault();
+            return false;
+        }
+        // Ctrl+Shift+K - Firefox Console
+        if (e.ctrlKey && e.shiftKey && e.key === 'K') {
+            e.preventDefault();
+            return false;
+        }
+        // F5 is allowed (page refresh)
+        // Ctrl+R is allowed (page refresh)
+    });
+    
+    // Detect DevTools by window resize (advanced detection)
+    const detectDevTools = function() {
+        const threshold = 160;
+        const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+        const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+        
+        if (widthThreshold || heightThreshold) {
+            // DevTools detected - redirect or alert
+            document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Arial;font-size:24px;text-align:center;padding:20px;"><div><h1>🔒</h1><p>Modo desarrollador no permitido</p><p style="font-size:16px;color:#666;">Por favor, recarga la página</p></div></div>';
+        }
+    };
+    
+    // Check periodically
+    window.addEventListener('resize', detectDevTools);
+    detectDevTools();
+})();
+
+// Initialize the application
 //         }
 //     });
 //     
