@@ -13,6 +13,17 @@ let isDarkMode = false;
 // Speech synthesis
 const synth = window.speechSynthesis;
 
+// Security: Decrypt function
+function decryptData(encryptedData) {
+    try {
+        const decoded = atob(encryptedData);
+        return JSON.parse(decoded);
+    } catch (e) {
+        console.error('Decryption error:', e);
+        return null;
+    }
+}
+
 // Load history from localStorage
 function loadHistory() {
     const saved = localStorage.getItem('searchHistory');
@@ -259,12 +270,15 @@ async function initializeApp() {
 
 async function loadStudentData() {
     try {
-        const response = await fetch('/api/estudiantes');
+        const response = await fetch('/api/x7f9k2');  // Obfuscated endpoint
         if (!response.ok) {
             throw new Error('No se pudo cargar los datos');
         }
-        estudiantesData = await response.json();
-        console.log('Datos cargados:', estudiantesData.total, 'estudiantes');
+        const encrypted = await response.json();
+        estudiantesData = decryptData(encrypted.d);
+        if (estudiantesData) {
+            console.log('Datos cargados:', estudiantesData.total, 'estudiantes');
+        }
     } catch (error) {
         console.error('Error al cargar datos:', error);
         updateBotMessage('❌ Error al cargar la base de datos. Por favor, recargue la página.', 'error');
@@ -274,9 +288,12 @@ async function loadStudentData() {
 // Fetch suggestions from API
 async function fetchSuggestions(query) {
     try {
-        const response = await fetch(`/api/sugerencias?q=${encodeURIComponent(query)}&limit=8`);
-        const data = await response.json();
-        displaySuggestions(data.sugerencias);
+        const response = await fetch(`/api/s3r7v9?q=${encodeURIComponent(query)}&limit=8`);  // Obfuscated endpoint
+        const encrypted = await response.json();
+        const data = decryptData(encrypted.d);
+        if (data) {
+            displaySuggestions(data.sugerencias);
+        }
     } catch (error) {
         console.error('Error al obtener sugerencias:', error);
     }
@@ -359,8 +376,13 @@ function performSearch() {
     // Search using API
     setTimeout(async () => {
         try {
-            const response = await fetch(`/api/buscar?q=${encodeURIComponent(searchTerm)}`);
-            const data = await response.json();
+            const response = await fetch(`/api/q5m8n1?q=${encodeURIComponent(searchTerm)}`);  // Obfuscated endpoint
+            const encrypted = await response.json();
+            const data = decryptData(encrypted.d);
+            
+            if (!data) {
+                throw new Error('Error al desencriptar datos');
+            }
             
             // Add to history if results found
             if (data.resultados.length > 0) {

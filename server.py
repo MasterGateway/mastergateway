@@ -1,15 +1,56 @@
-from flask import Flask, render_template, jsonify, request, send_from_directory
+from flask import Flask, render_template, jsonify, request, send_from_directory, session
 from flask_cors import CORS
 import json
 import os
 from pathlib import Path
 from difflib import get_close_matches
+import base64
+import secrets
+import hashlib
+from datetime import datetime, timedelta
 
 # Get the base directory
 BASE_DIR = Path(__file__).resolve().parent
 
 app = Flask(__name__)
+app.secret_key = secrets.token_hex(32)  # Secret key for sessions
 CORS(app)
+
+# Security: Rate limiting storage
+request_tracker = {}
+
+def check_rate_limit(identifier, max_requests=30, window_seconds=60):
+    """Simple rate limiting"""
+    now = datetime.now()
+    
+    # Clean old entries
+    expired = [k for k, v in request_tracker.items() if now - v['time'] > timedelta(seconds=window_seconds)]
+    for k in expired:
+        del request_tracker[k]
+    
+    # Check rate
+    if identifier in request_tracker:
+        if request_tracker[identifier]['count'] >= max_requests:
+            return False
+        request_tracker[identifier]['count'] += 1
+    else:
+        request_tracker[identifier] = {'count': 1, 'time': now}
+    
+    return True
+
+def simple_encrypt(data):
+    """Simple obfuscation using base64"""
+    json_str = json.dumps(data)
+    encoded = base64.b64encode(json_str.encode('utf-8')).decode('utf-8')
+    return encoded
+
+def simple_decrypt(data):
+    """Simple deobfuscation"""
+    try:
+        decoded = base64.b64decode(data.encode('utf-8')).decode('utf-8')
+        return json.loads(decoded)
+    except:
+        return None
 
 # Cargar datos de estudiantes
 def cargar_estudiantes():
@@ -47,14 +88,34 @@ def health():
         "version": "1.0.0"
     })
 
-@app.route('/api/estudiantes')
+# SECURITY: Obfuscated endpoints with hashed names
+@app.route('/api/x7f9k2')  # was /api/estudiantes
 def get_estudiantes():
-    """Devuelve todos los estudiantes"""
-    return jsonify(estudiantes_data)
+    """Devuelve metadata (NO todos los estudiantes)"""
+    # Rate limiting
+    client_ip = request.remote_addr
+    if not check_rate_limit(f"meta_{client_ip}", max_requests=10, window_seconds=60):
+        return jsonify({"error": "Demasiadas solicitudes"}), 429
+    
+    # Solo devolver metadata, NO los estudiantes completos
+    metadata = {
+        "total": estudiantes_data.get('total', 0),
+        "ultima_actualizacion": estudiantes_data.get('ultima_actualizacion', ''),
+        "status": "ok"
+    }
+    
+    # Encriptar respuesta
+    encrypted = simple_encrypt(metadata)
+    return jsonify({"d": encrypted})
 
-@app.route('/api/buscar')
+@app.route('/api/q5m8n1')  # was /api/buscar
 def buscar():
-    """Busca estudiantes por término"""
+    """Busca estudiantes por término - ENCRIPTADO"""
+    # Rate limiting
+    client_ip = request.remote_addr
+    if not check_rate_limit(f"search_{client_ip}", max_requests=30, window_seconds=60):
+        return jsonify({"error": "Demasiadas solicitudes"}), 429
+    
     termino = request.args.get('q', '').lower().strip()
     
     if not termino:
@@ -69,20 +130,29 @@ def buscar():
         if termino in nombre or termino in dni or termino in codigo:
             resultados.append(estudiante)
     
-    return jsonify({
+    # Encriptar resultados
+    response_data = {
         "resultados": resultados,
         "total": len(resultados),
         "termino": termino
-    })
+    }
+    encrypted = simple_encrypt(response_data)
+    return jsonify({"d": encrypted})
 
-@app.route('/api/sugerencias')
+@app.route('/api/s3r7v9')  # was /api/sugerencias
 def sugerencias():
-    """Devuelve sugerencias de autocompletado"""
+    """Devuelve sugerencias de autocompletado - ENCRIPTADO"""
+    # Rate limiting
+    client_ip = request.remote_addr
+    if not check_rate_limit(f"suggest_{client_ip}", max_requests=50, window_seconds=60):
+        return jsonify({"error": "Too many requests"}), 429
+    
     termino = request.args.get('q', '').lower().strip()
     limite = int(request.args.get('limit', 10))
     
     if not termino or len(termino) < 2:
-        return jsonify({"sugerencias": []})
+        encrypted = simple_encrypt({"sugerencias": []})
+        return jsonify({"d": encrypted})
     
     sugerencias_list = []
     
@@ -120,7 +190,9 @@ def sugerencias():
         if len(sugerencias_list) >= limite:
             break
     
-    return jsonify({"sugerencias": sugerencias_list[:limite]})
+    # Encriptar sugerencias
+    encrypted = simple_encrypt({"sugerencias": sugerencias_list[:limite]})
+    return jsonify({"d": encrypted})
 
 @app.route('/api/estadisticas')
 def estadisticas():
