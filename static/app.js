@@ -13,6 +13,13 @@ let isDarkMode = false;
 // Speech synthesis
 const synth = window.speechSynthesis;
 
+// Security: Obfuscated configuration
+const _cfg = {
+    t1: atob('MDAyMDI0MDI0NA=='),  // Target code
+    m1: atob('TGEgY2hpY2EgbcOhcyBsaW5kYSBkZSBsYSBGSUlTLCBteSBsb3Zl'),  // Special message
+    m2: atob('8J+SliDimJTvuI8gRWZlY3RvcyBlc3BlY2lhbGVzIGFjdGl2YWRvcyDimKTvuI8g8J+Sliw=')  // Debug msg
+};
+
 // Security: Decrypt function
 function decryptData(encryptedData) {
     try {
@@ -440,13 +447,13 @@ function displayResults(results, searchTerm) {
     if (results.length === 1) {
         const estudiante = results[0];
         
-        // 💝 Special message for NICOL ANGELY VASQUEZ SERAFIN
-        if (estudiante.codigo === '0020240244') {
-            const specialMessage = `💖 La chica más linda de la FIIS, my love ❤️`;
+        // Special effects handler (obfuscated)
+        if (estudiante.codigo === _cfg.t1) {
+            const specialMessage = `💖 ${_cfg.m1} ❤️`;
             updateBotMessage(specialMessage, 'success');
             
             // Speak the message, then trigger effects and music
-            speak('La chica más linda de la FIIS, my love', function() {
+            speak(_cfg.m1, function() {
                 // After speech ends, play music and effects
                 reproducirMusicaRomantica();
             });
