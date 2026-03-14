@@ -642,8 +642,8 @@ body.dark-mode .empty-history {
 .search-section {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
-    padding: 35px;
-    border-radius: 25px;
+    padding: 25px;
+    border-radius: 20px;
     box-shadow: var(--shadow-lg);
     margin-bottom: 30px;
     border: 1px solid rgba(255, 255, 255, 0.3);
@@ -651,8 +651,8 @@ body.dark-mode .empty-history {
 
 .search-box {
     display: flex;
-    gap: 15px;
-    margin-bottom: 15px;
+    gap: 12px;
+    margin-bottom: 12px;
 }
 
 .search-input-wrapper {
@@ -662,10 +662,10 @@ body.dark-mode .empty-history {
 
 #searchInput {
     width: 100%;
-    padding: 20px 28px;
-    font-size: 1.15rem;
+    padding: 14px 20px;
+    font-size: 1rem;
     border: 2px solid var(--border-color);
-    border-radius: 18px;
+    border-radius: 15px;
     outline: none;
     transition: all 0.3s ease;
     background: white;
@@ -674,7 +674,7 @@ body.dark-mode .empty-history {
 
 #searchInput:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.15), var(--glow);
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12), var(--glow);
     transform: translateY(-1px);
 }
 
@@ -925,10 +925,14 @@ body.dark-mode .suggestion-item:hover {
     grid-template-columns: 250px 1fr;
     gap: 30px;
     padding: 30px;
+    align-items: start;
 }
 
 .result-photo {
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .photo-container {
@@ -976,6 +980,7 @@ body.dark-mode .suggestion-item:hover {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 20px;
+    align-items: stretch;
 }
 
 .info-group {
@@ -984,6 +989,9 @@ body.dark-mode .suggestion-item:hover {
     border-radius: 18px;
     border-left: 4px solid var(--primary-color);
     transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .info-group:hover {
@@ -1004,6 +1012,13 @@ body.dark-mode .suggestion-item:hover {
     font-size: 1.15rem;
     color: var(--text-primary);
     font-weight: 600;
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Auto reduce email font size if too long */
+.info-value[style*="font-size"] {
+    font-size: 0.9rem !important;
 }
 
 .info-value.empty {

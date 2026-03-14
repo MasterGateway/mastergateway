@@ -568,6 +568,29 @@ function createResultCard(estudiante) {
         </div>
     `;
 
+    // Check email length and adjust font size
+    setTimeout(() => {
+        const emailElement = card.querySelector('.info-group .info-label:contains("📧")');
+        if (emailElement) {
+            const emailValueElement = emailElement.parentElement.querySelector('.info-value');
+            if (emailValueElement && emailMostrar.length > 30) {
+                emailValueElement.style.fontSize = '0.9rem';
+            }
+        }
+        
+        // Alternative: Find all email info-values and check length
+        const allInfoGroups = card.querySelectorAll('.info-group');
+        allInfoGroups.forEach(group => {
+            const label = group.querySelector('.info-label');
+            if (label && label.textContent.includes('📧')) {
+                const valueElement = group.querySelector('.info-value');
+                if (valueElement && emailMostrar.length > 30) {
+                    valueElement.style.fontSize = '0.9rem';
+                }
+            }
+        });
+    }, 50);
+
     // Add click handler to photo
     if (hasFoto) {
         setTimeout(() => {
