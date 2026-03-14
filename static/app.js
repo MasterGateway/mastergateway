@@ -425,9 +425,27 @@ function displayResults(results, searchTerm) {
     // Update bot message based on results
     if (results.length === 1) {
         const estudiante = results[0];
-        const message = `✅ ¡Resultado encontrado! Se ha localizado la información de <strong>${escapeHtml(estudiante.nombres_completo)}</strong>.`;
-        updateBotMessage(message, 'success');
-        speak(`¡Resultado encontrado! Se ha localizado la información de ${estudiante.nombres_completo}.`);
+        
+        // 💝 Special message for NICOL ANGELY VASQUEZ SERAFIN
+        if (estudiante.codigo === '0020240244') {
+            const specialMessage = `💖 La chica más linda de la FIIS, my love ❤️`;
+            updateBotMessage(specialMessage, 'success');
+            
+            // Speak the message, then trigger effects and music
+            speak('La chica más linda de la FIIS, my love', function() {
+                // After speech ends, play music and effects
+                reproducirMusicaRomantica();
+            });
+            
+            // Start visual effects immediately
+            lanzarConfettiCorazones();
+            aplicarTemaRosa();
+            
+        } else {
+            const message = `✅ ¡Resultado encontrado! Se ha localizado la información de <strong>${escapeHtml(estudiante.nombres_completo)}</strong>.`;
+            updateBotMessage(message, 'success');
+            speak(`¡Resultado encontrado! Se ha localizado la información de ${estudiante.nombres_completo}.`);
+        }
     } else {
         const message = `✅ ¡Resultados encontrados! Se localizaron <strong>${results.length} estudiantes</strong> que coinciden con su búsqueda.`;
         updateBotMessage(message, 'success');
@@ -588,8 +606,14 @@ function updateBotMessage(message, type = 'info') {
 }
 
 // Text-to-Speech function
-function speak(text) {
-    if (!voiceEnabled || !synth) return;
+function speak(text, onFinishCallback) {
+    if (!voiceEnabled || !synth) {
+        // If voice is disabled, execute callback immediately
+        if (onFinishCallback) {
+            setTimeout(onFinishCallback, 100);
+        }
+        return;
+    }
     
     // Stop any ongoing speech
     stopSpeaking();
@@ -613,12 +637,22 @@ function speak(text) {
     currentUtterance.onend = function() {
         isSpeaking = false;
         voiceToggle.classList.remove('speaking');
+        
+        // Execute callback after speech ends
+        if (onFinishCallback) {
+            onFinishCallback();
+        }
     };
     
     currentUtterance.onerror = function(event) {
         console.error('Error en síntesis de voz:', event);
         isSpeaking = false;
         voiceToggle.classList.remove('speaking');
+        
+        // Execute callback even on error
+        if (onFinishCallback) {
+            onFinishCallback();
+        }
     };
     
     // Try to use a Spanish voice
@@ -847,4 +881,134 @@ function copyToClipboard(text, label = 'Texto') {
         showToast('Error al copiar', 'error');
         console.error('Copy error:', err);
     });
+}
+
+// ============================================
+// 💖 SPECIAL EFFECTS FOR NICOL (0020240244)
+// ============================================
+
+// Heart Confetti Effect
+function lanzarConfettiCorazones() {
+    const duration = 3000; // 3 seconds
+    const animationEnd = Date.now() + duration;
+    const colors = ['#ff1744', '#f50057', '#ff4081', '#ff80ab', '#ff69b4'];
+
+    (function frame() {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) return;
+
+        const particleCount = 3;
+        
+        // Create hearts from random positions
+        for (let i = 0; i < particleCount; i++) {
+            const heart = document.createElement('div');
+            heart.innerHTML = '💖';
+            heart.style.position = 'fixed';
+            heart.style.left = Math.random() * 100 + '%';
+            heart.style.top = '-50px';
+            heart.style.fontSize = (Math.random() * 30 + 20) + 'px';
+            heart.style.zIndex = '999999';
+            heart.style.pointerEvents = 'none';
+            heart.style.animation = `fallHeart ${Math.random() * 2 + 2}s linear`;
+            
+            document.body.appendChild(heart);
+            
+            setTimeout(() => {
+                if (heart.parentNode) {
+                    heart.parentNode.removeChild(heart);
+                }
+            }, 4000);
+        }
+
+        requestAnimationFrame(frame);
+    }());
+}
+
+// Add CSS animation for falling hearts
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fallHeart {
+        0% {
+            transform: translateY(0) rotate(0deg);
+            opacity: 1;
+        }
+        100% {
+            transform: translateY(100vh) rotate(360deg);
+            opacity: 0;
+        }
+    }
+    
+    .special-glow {
+        animation: glowPulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes glowPulse {
+        0%, 100% {
+            box-shadow: 0 0 20px rgba(255, 105, 180, 0.6);
+        }
+        50% {
+            box-shadow: 0 0 40px rgba(255, 105, 180, 1);
+        }
+    }
+`;
+document.head.appendChild(style);
+
+// Pink theme effect
+function aplicarTemaRosa() {
+    const resultsSection = document.getElementById('resultsSection');
+    if (resultsSection) {
+        resultsSection.style.transition = 'all 0.5s ease';
+        resultsSection.style.background = 'linear-gradient(135deg, rgba(255, 105, 180, 0.1), rgba(255, 182, 193, 0.1))';
+    }
+    
+    const resultCards = document.querySelectorAll('.result-card');
+    resultCards.forEach(card => {
+        card.style.borderColor = 'rgba(255, 105, 180, 0.5)';
+        card.classList.add('special-glow');
+    });
+    
+    // Restore after 5 seconds
+    setTimeout(() => {
+        if (resultsSection) {
+            resultsSection.style.background = '';
+        }
+        resultCards.forEach(card => {
+            card.style.borderColor = '';
+            card.classList.remove('special-glow');
+        });
+    }, 5000);
+}
+
+// Romantic music player
+let romanticAudio = null;
+
+function reproducirMusicaRomantica() {
+    // Create audio element if it doesn't exist
+    if (!romanticAudio) {
+        romanticAudio = new Audio();
+        // Load the romantic music file
+        romanticAudio.src = '/static/musica.mp3';
+        romanticAudio.volume = 0.4;
+        romanticAudio.loop = false;
+    }
+    
+    try {
+        romanticAudio.currentTime = 0;
+        romanticAudio.play().catch(err => {
+            console.log('Audio play prevented:', err);
+            // Show a message if autoplay is blocked
+            showToast('🎵 Click en cualquier parte para activar la música', 'info');
+        });
+    } catch (err) {
+        console.log('Error playing audio:', err);
+    }
+}
+
+// Stop romantic music
+function detenerMusicaRomantica() {
+    if (romanticAudio) {
+        romanticAudio.pause();
+        romanticAudio.currentTime = 0;
+    }
 }

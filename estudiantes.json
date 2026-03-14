@@ -23861,10 +23861,10 @@
             }
         },
         {
-            "codigo": "0020240244",
-            "dni": "61544212",
+            "codigo": "0020240xxx",
+            "dni": "oculto",
             "nombres_completo": "NICOL ANGELY VASQUEZ SERAFIN",
-            "email": "nicol.vasquez@unas.edu.pe",
+            "email": "hermosa.FIIS@unas.edu.pe",
             "celular": null,
             "anio_ingreso": "2024",
             "foto_local": "D:\\Downloads\\UNAS-DNI\\pagina_3\\datos_consultados\\fotos\\0020240244.jpg",
@@ -23876,8 +23876,8 @@
                 "apmaterno": "SERAFIN",
                 "nombre": "NICOL ANGELY",
                 "email": "nicol.vasquez@unas.edu.pe",
-                "dni": "61544212",
-                "codigo": "0020240244",
+                "dni": "oculto",
+                "codigo": "0020240xxx",
                 "registered_days": 559
             }
         },
@@ -37550,27 +37550,6 @@
                 "dni": "60029938",
                 "codigo": "0020230175",
                 "registered_days": 1005
-            }
-        },
-        {
-            "codigo": "0020230176",
-            "dni": "75696755",
-            "nombres_completo": "ARNOLD HANS MAYS MELENDEZ",
-            "email": "melendezmaysarnold@gmail.com",
-            "celular": null,
-            "anio_ingreso": "2023",
-            "foto_local": "D:\\Downloads\\UNAS-DNI\\pagina_3\\datos_consultados\\fotos\\0020230176.jpg",
-            "estado_foto": "Descargada (año 2023)",
-            "fecha_consulta": "2026-03-14T15:35:03.690169",
-            "datos_completos": {
-                "tdocumento": "DNI75696755",
-                "appaterno": "MAYS",
-                "apmaterno": "MELENDEZ",
-                "nombre": "ARNOLD HANS",
-                "email": "melendezmaysarnold@gmail.com",
-                "dni": "75696755",
-                "codigo": "0020230176",
-                "registered_days": 887
             }
         },
         {
