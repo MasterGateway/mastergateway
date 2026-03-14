@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MasterGateway - Sistema Inteligente de Consulta</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo-section">
+                <div class="logo-icon">🚀</div>
+                <div class="logo-text">
+                    <h1>MasterGateway</h1>
+                    <p class="subtitle">Sistema Inteligente de Consulta de Datos</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <!-- Theme Toggle -->
+                <button class="icon-btn" id="themeToggle" title="Cambiar tema">
+                    <span class="theme-icon">🌙</span>
+                </button>
+                <!-- Menu Button -->
+                <button class="icon-btn" id="menuBtn" title="Menú">
+                    <span class="menu-icon">☰</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Menu Dropdown (Outside header for proper z-index) -->
+        <div class="menu-overlay" id="menuOverlay"></div>
+        <div class="dropdown-content" id="menuDropdown">
+            <!-- Historial Section -->
+            <div class="menu-section-header">
+                <h3>🕐 Historial de Búsquedas</h3>
+                <button class="clear-history" id="clearHistory">Limpiar</button>
+            </div>
+            <div class="history-list" id="historyList">
+                <p class="empty-history">No hay búsquedas recientes</p>
+            </div>
+            
+            <div class="menu-divider"></div>
+            
+            <!-- Menu Options -->
+            <div class="menu-options">
+                <div class="menu-item" id="infoBtn">
+                    <span class="menu-item-icon">ℹ️</span>
+                    <div class="menu-item-content">
+                        <strong>Información</strong>
+                        <small>Acerca del sistema</small>
+                    </div>
+                </div>
+                
+                <div class="menu-item" id="contactBtn">
+                    <span class="menu-item-icon">📧</span>
+                    <div class="menu-item-content">
+                        <strong>Contacto</strong>
+                        <small>Soporte y ayuda</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bot Agent Section -->
+        <div class="bot-section">
+            <div class="bot-avatar">
+                <div class="bot-face">
+                    <div class="bot-eyes">
+                        <div class="eye left"></div>
+                        <div class="eye right"></div>
+                    </div>
+                    <div class="bot-mouth"></div>
+                </div>
+                <button class="voice-toggle" id="voiceToggle" title="Activar/Desactivar voz">
+                    🔊
+                </button>
+            </div>
+            <div class="bot-message-container">
+                <div class="bot-message" id="botMessage">
+                    ¡Bienvenido a MasterGateway! 👋<br>
+                    Sistema inteligente de consulta. Por favor, introduzca la información de la persona que desea buscar.
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <div class="search-box">
+                <div class="search-input-wrapper">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        placeholder="Buscar por Nombre, DNI o Código Universitario..."
+                        autocomplete="off"
+                    >
+                    <div class="suggestions-dropdown" id="suggestionsDropdown"></div>
+                </div>
+                <button id="searchBtn" class="search-btn">
+                    <span class="search-icon">🔍</span>
+                    Buscar
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Buscando...</p>
+        </div>
+
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection">
+            <!-- Results will be inserted here -->
+        </div>
+
+        <!-- Toast Notifications -->
+        <div class="toast-container" id="toastContainer"></div>
+
+        <!-- Photo Modal -->
+        <div class="modal" id="photoModal">
+            <div class="modal-overlay" id="modalOverlay"></div>
+            <div class="modal-content">
+                <button class="modal-close" id="modalClose">&times;</button>
+                <div class="modal-body">
+                    <img src="" alt="Foto ampliada" id="modalImage">
+                    <div class="modal-info">
+                        <h3 id="modalName"></h3>
+                        <p id="modalCode"></p>
+                    </div>
+                </div>
+                <div class="modal-controls">
+                    <button class="zoom-btn" id="zoomOut">−</button>
+                    <button class="zoom-btn" id="zoomReset">⟲</button>
+                    <button class="zoom-btn" id="zoomIn">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
