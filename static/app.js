@@ -95,12 +95,12 @@ async function initializeApp() {
     // Load preferences
     loadHistory();
     loadTheme();
-    
+
     // Get DOM elements
     botMessageElement = document.getElementById('botMessage');
     resultsSection = document.getElementById('resultsSection');
     loadingElement = document.getElementById('loading');
-    
+
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
     const voiceToggle = document.getElementById('voiceToggle');
@@ -120,7 +120,7 @@ async function initializeApp() {
 
     // Event listeners
     searchBtn.addEventListener('click', performSearch);
-    
+
     searchInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             suggestionsDropdown.classList.remove('active');
@@ -226,7 +226,7 @@ async function initializeApp() {
 
     // Update history count
     updateHistoryCount();
-    
+
     // Welcome message with voice - wait for voices to load
     if (synth) {
         // Load voices first
@@ -242,7 +242,7 @@ async function initializeApp() {
             }, 500);
         }
     }
-    
+
     // Also speak on first user interaction
     let hasSpokenWelcome = false;
     const firstInteraction = function() {
@@ -285,27 +285,27 @@ async function fetchSuggestions(query) {
 // Display suggestions dropdown
 function displaySuggestions(sugerencias) {
     const dropdown = document.getElementById('suggestionsDropdown');
-    
+
     if (sugerencias.length === 0) {
         dropdown.classList.remove('active');
         return;
     }
 
     dropdown.innerHTML = '';
-    
+
     sugerencias.forEach(sugerencia => {
         const item = document.createElement('div');
         item.className = 'suggestion-item';
-        
-        const icon = sugerencia.tipo === 'nombre' ? '👤' : 
-                    sugerencia.tipo === 'dni' ? '🆔' : '📋';
-        
+
+        const icon = sugerencia.tipo === 'nombre' ? '👤' :
+            sugerencia.tipo === 'dni' ? '🆔' : '📋';
+
         item.innerHTML = `
             <span class="suggestion-icon">${icon}</span>
             <span class="suggestion-text">${escapeHtml(sugerencia.texto)}</span>
             <span class="suggestion-type">${sugerencia.tipo}</span>
         `;
-        
+
         item.addEventListener('click', function() {
             // Use the actual value (codigo, dni, or nombre) instead of formatted text
             const searchValue = sugerencia.valor || sugerencia.texto;
@@ -313,10 +313,10 @@ function displaySuggestions(sugerencias) {
             dropdown.classList.remove('active');
             performSearch();
         });
-        
+
         dropdown.appendChild(item);
     });
-    
+
     dropdown.classList.add('active');
 }
 
@@ -335,10 +335,10 @@ function debounce(func, wait) {
 
 function performSearch() {
     const searchTerm = document.getElementById('searchInput').value.trim();
-    
+
     // Hide suggestions
     document.getElementById('suggestionsDropdown').classList.remove('active');
-    
+
     if (!searchTerm) {
         const message = '⚠️ Por favor, introduzca un término de búsqueda (nombre, DNI o código).';
         updateBotMessage(message, 'warning');
@@ -357,16 +357,16 @@ function performSearch() {
     showLoading();
 
     // Search using API
-    setTimeout(async () => {
+    setTimeout(async() => {
         try {
             const response = await fetch(`/api/buscar?q=${encodeURIComponent(searchTerm)}`);
             const data = await response.json();
-            
+
             // Add to history if results found
             if (data.resultados.length > 0) {
                 addToHistory(searchTerm);
             }
-            
+
             displayResults(data.resultados, searchTerm);
         } catch (error) {
             console.error('Error en búsqueda:', error);
@@ -384,17 +384,17 @@ function searchStudents(searchTerm) {
 
     for (const estudiante of estudiantesData.estudiantes) {
         // Search by name
-        const nombreCompleto = estudiante.nombres_completo?.toLowerCase() || '';
-        
+        const nombreCompleto = estudiante.nombres_completo ? .toLowerCase() || '';
+
         // Search by DNI
-        const dni = estudiante.dni?.toLowerCase() || '';
-        
+        const dni = estudiante.dni ? .toLowerCase() || '';
+
         // Search by code
-        const codigo = estudiante.codigo?.toLowerCase() || '';
+        const codigo = estudiante.codigo ? .toLowerCase() || '';
 
         // Check if any field matches
-        if (nombreCompleto.includes(term) || 
-            dni.includes(term) || 
+        if (nombreCompleto.includes(term) ||
+            dni.includes(term) ||
             codigo.includes(term)) {
             results.push(estudiante);
         }
@@ -425,22 +425,22 @@ function displayResults(results, searchTerm) {
     // Update bot message based on results
     if (results.length === 1) {
         const estudiante = results[0];
-        
+
         // 💝 Special message for NICOL ANGELY VASQUEZ SERAFIN
         if (estudiante.codigo === '0020240244') {
             const specialMessage = `💖 La chica más linda de la FIIS, my love ❤️`;
             updateBotMessage(specialMessage, 'success');
-            
+
             // Speak the message, then trigger effects and music
             speak('La chica más linda de la FIIS, my love', function() {
                 // After speech ends, play music and effects
                 reproducirMusicaRomantica();
             });
-            
+
             // Start visual effects immediately
             lanzarConfettiCorazones();
             aplicarTemaRosa();
-            
+
         } else {
             const message = `✅ ¡Resultado encontrado! Se ha localizado la información de <strong>${escapeHtml(estudiante.nombres_completo)}</strong>.`;
             updateBotMessage(message, 'success');
@@ -476,18 +476,18 @@ function createResultCard(estudiante) {
     // Generate email if not exists: primerNombre.segundoApellido@unas.edu.pe
     let emailMostrar = estudiante.email;
     let emailGenerado = false;
-    
+
     if (!emailMostrar || emailMostrar.trim() === '') {
         // Get complete data
-        const nombres = estudiante.datos_completos?.nombre || '';
-        const apellidoPaterno = estudiante.datos_completos?.appaterno || '';
-        
+        const nombres = estudiante.datos_completos ? .nombre || '';
+        const apellidoPaterno = estudiante.datos_completos ? .appaterno || '';
+
         if (nombres && apellidoPaterno) {
             // Get first name
             const primerNombre = nombres.split(' ')[0].toLowerCase();
             // Get paternal surname (second apellido)
             const segundoApellido = apellidoPaterno.toLowerCase();
-            
+
             emailMostrar = `${primerNombre}.${segundoApellido}@unas.edu.pe`;
             emailGenerado = true;
         } else {
