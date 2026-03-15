@@ -400,6 +400,85 @@ function performSearch() {
         return;
     }
 
+    // Detectar si es DNI (8 dígitos) o búsqueda normal
+    const isDNI = /^\d{8}$/.test(searchTerm);
+    
+    if (isDNI) {
+        // Búsqueda por DNI en RENIEC
+        buscarPorDNI(searchTerm);
+    } else {
+        // Búsqueda normal en base de datos local
+        buscarEnBaseDatos(searchTerm);
+    }
+}
+
+async function buscarPorDNI(dni) {
+    showLoading();
+    
+    try {
+        const response = await fetch('/api/r4n8i2c', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ dni: dni })
+        });
+        
+        const encrypted = await response.json();
+        const data = decryptData(encrypted.d);
+        
+        if (!data) {
+            throw new Error('Error al desencriptar datos');
+        }
+        
+        // Debug: Ver datos recibidos
+        console.log('📥 Datos recibidos de RENIEC:', data);
+        
+        if (data.encontrado) {
+            // Formatear resultado de RENIEC
+            const resultado = {
+                tipo: 'reniec',
+                dni: data.dni,
+                nombres_completo: data.nombres_completo,
+                nombres: data.nombres,
+                apellido_paterno: data.apellido_paterno,
+                apellido_materno: data.apellido_materno,
+                sexo: data.sexo,
+                fecha_nacimiento: data.fecha_nacimiento,
+                estado_civil: data.estado_civil,
+                departamento: data.departamento,
+                provincia: data.provincia,
+                distrito: data.distrito,
+                direccion: data.direccion,
+                direccion_completa: data.direccion_completa,
+                ubigeo: data.ubigeo,
+                foto: data.foto
+            };
+            
+            console.log('📤 Pasando a displayReniecResult:', resultado);
+            
+            displayReniecResult(resultado);
+            addToHistory(dni);
+            
+            const message = `✅ Información de RENIEC encontrada para DNI: ${dni}`;
+            updateBotMessage(message, 'success');
+            speak(`Se encontró información de RENIEC para el D N I ${dni.split('').join(' ')}`);
+        } else {
+            hideLoading();
+            const message = data.mensaje || '❌ No se encontró información para este DNI.';
+            updateBotMessage(message, 'error');
+            speak('No se encontró información para este D N I');
+        }
+    } catch (error) {
+        console.error('Error buscando DNI:', error);
+        hideLoading();
+        const message = '❌ Error al consultar el DNI. Por favor, intente nuevamente.';
+        updateBotMessage(message, 'error');
+        speak('Error al consultar el D N I. Por favor, intente nuevamente.');
+    }
+}
+
+async function buscarEnBaseDatos(searchTerm) {
     if (!estudiantesData) {
         const message = '❌ Los datos aún no están cargados. Por favor, espere un momento.';
         updateBotMessage(message, 'error');
@@ -664,6 +743,144 @@ function createResultCard(estudiante) {
     }
 
     return card;
+}
+
+function displayReniecResult(data) {
+    hideLoading();
+    
+    console.log('🎨 displayReniecResult iniciado con:', data);
+    
+    const resultsSection = document.getElementById('resultsSection');
+    resultsSection.innerHTML = '';
+    resultsSection.style.display = 'block';
+    
+    const card = document.createElement('div');
+    card.className = 'result-card';
+    
+    // Determinar género y emoji
+    const generoEmoji = data.sexo === 'MASCULINO' ? '👨' : data.sexo === 'FEMENINO' ? '👩' : '👤';
+    
+    // Formatear nombre completo (asegurar que existe)
+    const nombreCompleto = data.nombres_completo || 
+                          `${data.apellido_paterno || ''} ${data.apellido_materno || ''}, ${data.nombres || ''}`.trim() ||
+                          'No disponible';
+    
+    console.log('   Nombre completo formateado:', nombreCompleto);
+    console.log('   DNI:', data.dni);
+    console.log('   Sexo:', data.sexo);
+    console.log('   Dirección completa:', data.direccion_completa);
+    
+    card.innerHTML = `
+        <div class="result-header">
+            <div class="result-badge reniec-badge">🏛️ RENIEC</div>
+        </div>
+        <div class="result-body">
+            ${data.foto ? `
+            <div class="photo-container">
+                <img src="${escapeHtml(data.foto)}" alt="Foto" onerror="this.parentElement.innerHTML='<div class=\'no-photo\'>📷<br>Sin Foto</div>'">
+            </div>
+            ` : `
+            <div class="photo-container">
+                <div class="no-photo">📷<br>Sin Foto</div>
+            </div>
+            `}
+            <div class="info-container">
+                <div class="info-group">
+                    <span class="info-label">${generoEmoji} Nombre Completo:</span>
+                    <span class="info-value">${escapeHtml(nombreCompleto)}</span>
+                </div>
+                <div class="info-group">
+                    <span class="info-label">🆔 DNI:</span>
+                    <span class="info-value">${escapeHtml(data.dni || 'No disponible')}</span>
+                </div>
+                ${data.nombres ? `
+                <div class="info-group">
+                    <span class="info-label">👤 Nombres:</span>
+                    <span class="info-value">${escapeHtml(data.nombres)}</span>
+                </div>
+                ` : ''}
+                ${data.apellido_paterno ? `
+                <div class="info-group">
+                    <span class="info-label">👨‍👦 Apellido Paterno:</span>
+                    <span class="info-value">${escapeHtml(data.apellido_paterno)}</span>
+                </div>
+                ` : ''}
+                ${data.apellido_materno ? `
+                <div class="info-group">
+                    <span class="info-label">👨‍👦 Apellido Materno:</span>
+                    <span class="info-value">${escapeHtml(data.apellido_materno)}</span>
+                </div>
+                ` : ''}
+                ${data.fecha_nacimiento ? `
+                <div class="info-group">
+                    <span class="info-label">🎂 Fecha de Nacimiento:</span>
+                    <span class="info-value">${escapeHtml(data.fecha_nacimiento)}</span>
+                </div>
+                ` : ''}
+                ${data.sexo ? `
+                <div class="info-group">
+                    <span class="info-label">⚧ Sexo:</span>
+                    <span class="info-value">${escapeHtml(data.sexo)}</span>
+                </div>
+                ` : ''}
+                ${data.estado_civil ? `
+                <div class="info-group">
+                    <span class="info-label">💍 Estado Civil:</span>
+                    <span class="info-value">${escapeHtml(data.estado_civil)}</span>
+                </div>
+                ` : ''}
+                ${data.direccion ? `
+                <div class="info-group">
+                    <span class="info-label">🏠 Dirección:</span>
+                    <span class="info-value">${escapeHtml(data.direccion)}</span>
+                </div>
+                ` : ''}
+                ${data.direccion_completa ? `
+                <div class="info-group">
+                    <span class="info-label">📍 Dirección Completa:</span>
+                    <span class="info-value">${escapeHtml(data.direccion_completa)}</span>
+                </div>
+                ` : ''}
+                ${data.distrito ? `
+                <div class="info-group">
+                    <span class="info-label">🏘️ Distrito:</span>
+                    <span class="info-value">${escapeHtml(data.distrito)}</span>
+                </div>
+                ` : ''}
+                ${data.provincia ? `
+                <div class="info-group">
+                    <span class="info-label">🌆 Provincia:</span>
+                    <span class="info-value">${escapeHtml(data.provincia)}</span>
+                </div>
+                ` : ''}
+                ${data.departamento ? `
+                <div class="info-group">
+                    <span class="info-label">🗺️ Departamento:</span>
+                    <span class="info-value">${escapeHtml(data.departamento)}</span>
+                </div>
+                ` : ''}
+                ${data.ubigeo ? `
+                <div class="info-group">
+                    <span class="info-label">📌 Ubigeo:</span>
+                    <span class="info-value">${escapeHtml(typeof data.ubigeo === 'object' ? JSON.stringify(data.ubigeo) : data.ubigeo)}</span>
+                </div>
+                ` : ''}
+            </div>
+        </div>
+        <div class="result-footer">
+            <button class="action-btn" onclick="nuevaBusqueda()">
+                <span class="btn-icon">🔍</span>
+                <span class="btn-text">Nueva Búsqueda</span>
+            </button>
+            <button class="action-btn" onclick="imprimirResultado()">
+                <span class="btn-icon">🖨️</span>
+                <span class="btn-text">Imprimir</span>
+            </button>
+        </div>
+    `;
+    
+    resultsSection.appendChild(card);
+    console.log('✅ Card de RENIEC agregado al DOM');
 }
 
 function updateBotMessage(message, type = 'info') {

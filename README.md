@@ -1,69 +1,148 @@
-# 🎓 Sistema de Consulta de Estudiantes - UNAS
+# 🎓 Sistema de Consulta Dual - UNAS + RENIEC
 
-Sistema web moderno e intuitivo para consultar información de estudiantes de la Universidad Nacional Agraria de la Selva (UNAS).
+Sistema web moderno e intuitivo para consultar información de estudiantes de la Universidad Nacional Agraria de la Selva (UNAS) y datos de RENIEC mediante API.
 
 ## 🌟 Características
 
-- **🤖 Agente Virtual Animado**: Bot interactivo que guía al usuario durante la búsqueda
-- **🔍 Búsqueda Unificada**: Un solo campo de búsqueda para nombre, DNI o código universitario
-- **📸 Visualización de Fotos**: Muestra las fotografías de los estudiantes cuando están disponibles
-- **📊 Estadísticas en Tiempo Real**: Visualiza el total de estudiantes, fotos disponibles y última actualización
-- **💫 Interfaz Moderna**: Diseño responsive con animaciones suaves y atractivas
-- **⚡ Búsqueda Rápida**: Resultados instantáneos con retroalimentación visual
+### Sistema Dual de Consulta
+- **🎓 Base de Datos Local**: Consulta por código de estudiante (2337 registros)
+- **🏛️ API RENIEC**: Consulta por DNI (8 dígitos) usando API de Factiliza
 
-## 📁 Estructura del Proyecto
+### Funcionalidades Principales
+- **🤖 Agente Virtual Animado**: Bot interactivo con síntesis de voz en español
+- **🔍 Búsqueda Inteligente**: Detecta automáticamente si es código o DNI
+- **💡 Autocompletado**: Sugerencias en tiempo real mientras escribes
+- **📸 Visualización de Fotos**: Muestra fotografías de estudiantes y RENIEC
+- **📊 Estadísticas en Tiempo Real**: Total de estudiantes y fotos disponibles
+- **💫 Interfaz Moderna**: Diseño glassmorphism con animaciones suaves
+- **🔒 Seguridad Avanzada**: Encriptación de API, rate limiting, DevTools bloqueado
+- **🎨 Tema Oscuro/Claro**: Alternancia de temas con preferencias guardadas
+- **⚡ Resultados Instantáneos**: Búsqueda rápida con retroalimentación visual
+
+## � Tipos de Búsqueda
+
+### 1️⃣ Búsqueda por Código de Estudiante
+```
+Formato: 0020240001 (10 dígitos)
+Fuente: Base de datos local (estudiantes.json)
+Datos: Nombre, DNI, Email, Teléfono, Año de ingreso, Foto local
+```
+
+### 2️⃣ Búsqueda por DNI
+```
+Formato: 61020080 (8 dígitos)
+Fuente: API de Factiliza/RENIEC
+Datos: Nombre completo, Dirección, Ubigeo, Estado civil, Fecha de nacimiento
+```
+
+## �📁 Estructura del Proyecto
 
 ```
 web_consulta/
-├── index.html          # Página principal
-├── styles.css          # Estilos y diseño
-├── app.js             # Lógica de la aplicación
-└── README.md          # Esta documentación
+├── server.py              # Backend Flask con integración RENIEC
+├── index.html             # Página principal (interfaz)
+├── static/
+│   ├── styles.css         # Estilos y diseño responsivo
+│   ├── app.js             # Lógica del frontend
+│   └── musica.mp3         # Audio para efectos especiales
+├── fotos/                 # Fotografías de estudiantes (1964 imágenes)
+├── estudiantes.json       # Base de datos local (2337 registros)
+├── requirements.txt       # Dependencias Python
+├── vercel.json           # Configuración de deployment
+├── .env                  # Variables de entorno (NO SUBIR A GIT)
+├── .env.example          # Ejemplo de configuración
+├── ENV_SETUP.md          # Guía de configuración de variables
+└── README.md             # Esta documentación
 ```
 
-## 🚀 Cómo Usar
+## 🚀 Instalación y Uso
 
-### Opción 1: Abrir directamente
-1. Abra el archivo `index.html` en su navegador web favorito
-2. Si las fotos no se cargan, use la Opción 2
+### 📋 Requisitos Previos
 
-### Opción 2: Servidor local (Recomendado)
+- Python 3.11+
+- Pip (gestor de paquetes de Python)
+- Token de API de Factiliza (para consultas de RENIEC)
 
-#### Usando Python:
+### ⚙️ Configuración Inicial
+
+#### 1. Clonar el repositorio
 ```bash
-# Desde la carpeta web_consulta
-python -m http.server 8000
+git clone https://github.com/MasterGateway/mastergateway.git
+cd mastergateway/web_consulta
 ```
 
-Luego abra: http://localhost:8000
-
-#### Usando Node.js (http-server):
+#### 2. Crear archivo .env
 ```bash
-# Instalar http-server globalmente (solo una vez)
-npm install -g http-server
+# Copiar el ejemplo
+cp ../.env.example ../.env
 
-# Desde la carpeta web_consulta
-http-server -p 8000
+# Editar .env y agregar tu token de Factiliza
+# RENIEC_TOKEN=tu_token_aqui
 ```
 
-Luego abra: http://localhost:8000
+#### 3. Instalar dependencias
+```bash
+pip install -r requirements.txt
+```
 
-### Opción 3: Live Server en VS Code
-1. Instale la extensión "Live Server" en VS Code
-2. Haga clic derecho en `index.html`
-3. Seleccione "Open with Live Server"
+#### 4. Ejecutar el servidor
+```bash
+python server.py
+```
+
+#### 5. Abrir en navegador
+```
+http://localhost:5000
+```
+
+### 🌐 Deployment en Vercel
+
+#### Configuración de Variables de Entorno
+
+1. Ve a tu proyecto en [Vercel Dashboard](https://vercel.com/dashboard)
+2. Settings → Environment Variables
+3. Agrega: `RENIEC_TOKEN` con tu token de Factiliza
+4. Guarda y re-deploy
+
+Ver más detalles en [ENV_SETUP.md](ENV_SETUP.md)
+
+## 🔍 Cómo Buscar
+
+### Búsqueda por Código de Estudiante
+```
+Ingresa: 0020240001
+Sistema: Consulta base de datos local
+Resultado: Datos del estudiante UNAS + foto
+```
+
+### Búsqueda por DNI (RENIEC)
+```
+Ingresa: 61020080
+Sistema: Consulta API de Factiliza
+Resultado: Datos de RENIEC (dirección, ubigeo, etc.)
+```
+
+### Búsqueda por Nombre
+```
+Ingresa: MARIA GARCIA
+Sistema: Autocompletado con sugerencias
+Resultado: Lista de coincidencias
+```
 
 ## 🔍 Funcionalidades de Búsqueda
 
 El sistema permite buscar estudiantes por:
 
-1. **Nombre completo o parcial**
+1. **Código de estudiante completo**
+   - Formato: 10 dígitos (Ej: 0020240001)
+   - Fuente: Base de datos local
+
+2. **DNI completo**
+   - Formato: 8 dígitos (Ej: 61020080)
+   - Fuente: API RENIEC/Factiliza
+
+3. **Nombre completo o parcial**
    - Ejemplo: "MARIA", "GARCIA LOPEZ"
-
-2. **DNI (completo o parcial)**
-   - Ejemplo: "71320865", "7132"
-
-3. **Código universitario (completo o parcial)**
    - Ejemplo: "0020240001", "002024"
 
 ### Características de búsqueda:

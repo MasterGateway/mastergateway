@@ -21,5 +21,10 @@ build/
 .DS_Store
 Thumbs.db
 
+# Environment variables (SECURITY)
+.env
+.env.local
+.env.*.local
+
 # Vercel
 .vercel

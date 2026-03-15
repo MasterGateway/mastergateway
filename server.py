@@ -8,9 +8,15 @@ import base64
 import secrets
 import hashlib
 from datetime import datetime, timedelta
+import requests
+from dotenv import load_dotenv
 
 # Get the base directory
 BASE_DIR = Path(__file__).resolve().parent
+
+# Load environment variables from web_consulta/.env
+load_dotenv(BASE_DIR / '.env')
+RENIEC_TOKEN = os.getenv('RENIEC_TOKEN')
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)  # Secret key for sessions
@@ -193,6 +199,83 @@ def sugerencias():
     # Encriptar sugerencias
     encrypted = simple_encrypt({"sugerencias": sugerencias_list[:limite]})
     return jsonify({"d": encrypted})
+
+@app.route('/api/r4n8i2c', methods=['POST'])
+def consultar_dni_reniec():
+    """Consulta DNI en API de Factiliza/RENIEC - ENCRIPTADO"""
+    # Rate limiting
+    client_ip = request.remote_addr
+    if not check_rate_limit(f"reniec_{client_ip}", max_requests=20, window_seconds=60):
+        return jsonify({"error": "Too many requests"}), 429
+    
+    try:
+        data = request.get_json()
+        dni = data.get('dni', '').strip()
+        
+        if not dni or not dni.isdigit() or len(dni) != 8:
+            encrypted = simple_encrypt({"error": "DNI inválido"})
+            return jsonify({"d": encrypted}), 400
+        
+        # Consultar API de Factiliza
+        url = f"https://api.factiliza.com/v1/dni/info/{dni}"
+        headers = {
+            'Authorization': f'Bearer {RENIEC_TOKEN}'
+        }
+        
+        response = requests.get(url, headers=headers, timeout=10)
+        
+        if response.status_code == 200:
+            reniec_data = response.json()
+            
+            # Debug: Imprimir respuesta completa
+            print(f"✅ Respuesta RENIEC para DNI {dni}:")
+            print(f"   Datos completos: {json.dumps(reniec_data, indent=2, ensure_ascii=False)}")
+            
+            # La API devuelve datos dentro de "data"
+            if 'data' in reniec_data:
+                data_reniec = reniec_data['data']
+            else:
+                data_reniec = reniec_data
+            
+            # Formatear datos para el frontend
+            resultado = {
+                "encontrado": True,
+                "tipo": "reniec",
+                "dni": data_reniec.get('numero', dni),
+                "nombres_completo": data_reniec.get('nombre_completo', ''),
+                "nombres": data_reniec.get('nombres', ''),
+                "apellido_paterno": data_reniec.get('apellido_paterno', ''),
+                "apellido_materno": data_reniec.get('apellido_materno', ''),
+                "sexo": data_reniec.get('sexo', ''),
+                "fecha_nacimiento": data_reniec.get('fecha_nacimiento', ''),
+                "estado_civil": data_reniec.get('estado_civil', ''),
+                "departamento": data_reniec.get('departamento', ''),
+                "provincia": data_reniec.get('provincia', ''),
+                "distrito": data_reniec.get('distrito', ''),
+                "direccion": data_reniec.get('direccion', ''),
+                "direccion_completa": data_reniec.get('direccion_completa', ''),
+                "ubigeo": data_reniec.get('ubigeo', ''),
+                "foto": data_reniec.get('foto', '')
+            }
+            
+            print(f"   📤 Enviando al frontend: {json.dumps(resultado, indent=2, ensure_ascii=False)}")
+            
+            encrypted = simple_encrypt(resultado)
+            return jsonify({"d": encrypted})
+        elif response.status_code == 404:
+            encrypted = simple_encrypt({"encontrado": False, "mensaje": "DNI no encontrado en RENIEC"})
+            return jsonify({"d": encrypted}), 404
+        else:
+            encrypted = simple_encrypt({"error": "Error al consultar RENIEC"})
+            return jsonify({"d": encrypted}), 500
+            
+    except requests.Timeout:
+        encrypted = simple_encrypt({"error": "Tiempo de espera agotado"})
+        return jsonify({"d": encrypted}), 504
+    except Exception as e:
+        print(f"Error consultando RENIEC: {str(e)}")
+        encrypted = simple_encrypt({"error": "Error interno del servidor"})
+        return jsonify({"d": encrypted}), 500
 
 @app.route('/api/estadisticas')
 def estadisticas():
