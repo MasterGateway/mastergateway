@@ -14,9 +14,21 @@ from dotenv import load_dotenv
 # Get the base directory
 BASE_DIR = Path(__file__).resolve().parent
 
-# Load environment variables from web_consulta/.env
-load_dotenv(BASE_DIR / '.env')
+# Load environment variables from web_consulta/.env (solo para desarrollo local)
+# En Vercel, las variables se cargan automáticamente
+if os.path.exists(BASE_DIR / '.env'):
+    load_dotenv(BASE_DIR / '.env')
+    print("📁 Cargando variables de entorno desde .env local")
+else:
+    print("☁️ Usando variables de entorno de Vercel")
+
 RENIEC_TOKEN = os.getenv('RENIEC_TOKEN')
+
+# Verificar que el token esté cargado
+if not RENIEC_TOKEN:
+    print("⚠️ WARNING: RENIEC_TOKEN no está configurado!")
+else:
+    print(f"✅ RENIEC_TOKEN cargado: {RENIEC_TOKEN[:20]}...")
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)  # Secret key for sessions
@@ -203,6 +215,15 @@ def sugerencias():
 @app.route('/api/r4n8i2c', methods=['POST'])
 def consultar_dni_reniec():
     """Consulta DNI en API de Factiliza/RENIEC - ENCRIPTADO"""
+    # Verificar que el token esté disponible
+    if not RENIEC_TOKEN:
+        print("❌ ERROR: RENIEC_TOKEN no está configurado")
+        encrypted = simple_encrypt({
+            "error": "Servicio RENIEC no disponible (token no configurado)",
+            "encontrado": False
+        })
+        return jsonify({"d": encrypted}), 500
+    
     # Rate limiting
     client_ip = request.remote_addr
     if not check_rate_limit(f"reniec_{client_ip}", max_requests=20, window_seconds=60):
@@ -216,13 +237,21 @@ def consultar_dni_reniec():
             encrypted = simple_encrypt({"error": "DNI inválido"})
             return jsonify({"d": encrypted}), 400
         
+        print(f"🔍 Consultando DNI {dni} en RENIEC...")
+        print(f"   Token: {RENIEC_TOKEN[:20]}...")
+        
         # Consultar API de Factiliza
         url = f"https://api.factiliza.com/v1/dni/info/{dni}"
         headers = {
             'Authorization': f'Bearer {RENIEC_TOKEN}'
         }
         
+        print(f"   URL: {url}")
+        print(f"   Headers: Authorization: Bearer {RENIEC_TOKEN[:20]}...")
+        
         response = requests.get(url, headers=headers, timeout=10)
+        
+        print(f"   Status Code: {response.status_code}")
         
         if response.status_code == 200:
             reniec_data = response.json()
@@ -263,18 +292,32 @@ def consultar_dni_reniec():
             encrypted = simple_encrypt(resultado)
             return jsonify({"d": encrypted})
         elif response.status_code == 404:
+            print(f"   ❌ DNI no encontrado en base de datos RENIEC")
             encrypted = simple_encrypt({"encontrado": False, "mensaje": "DNI no encontrado en RENIEC"})
             return jsonify({"d": encrypted}), 404
+        elif response.status_code == 401:
+            print(f"   ❌ Token inválido o expirado")
+            encrypted = simple_encrypt({"error": "Token de API inválido", "encontrado": False})
+            return jsonify({"d": encrypted}), 401
         else:
-            encrypted = simple_encrypt({"error": "Error al consultar RENIEC"})
+            print(f"   ❌ Error inesperado: {response.status_code}")
+            print(f"   Respuesta: {response.text[:200]}")
+            encrypted = simple_encrypt({"error": f"Error al consultar RENIEC (código {response.status_code})", "encontrado": False})
             return jsonify({"d": encrypted}), 500
             
     except requests.Timeout:
-        encrypted = simple_encrypt({"error": "Tiempo de espera agotado"})
+        print(f"   ⏱️ Timeout al consultar RENIEC")
+        encrypted = simple_encrypt({"error": "Tiempo de espera agotado", "encontrado": False})
         return jsonify({"d": encrypted}), 504
+    except requests.RequestException as e:
+        print(f"   ❌ Error de conexión: {str(e)}")
+        encrypted = simple_encrypt({"error": "Error de conexión con RENIEC", "encontrado": False})
+        return jsonify({"d": encrypted}), 500
     except Exception as e:
-        print(f"Error consultando RENIEC: {str(e)}")
-        encrypted = simple_encrypt({"error": "Error interno del servidor"})
+        print(f"   ❌ Error consultando RENIEC: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        encrypted = simple_encrypt({"error": "Error interno del servidor", "encontrado": False})
         return jsonify({"d": encrypted}), 500
 
 @app.route('/api/estadisticas')
